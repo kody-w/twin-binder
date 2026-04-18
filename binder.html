@@ -70,6 +70,7 @@ Click any incantation → it summons the card from the federation → <b>auto-sa
     <div class="toolbar">
       <input id="customIncant" placeholder="Or type 7 words: FORGE ANVIL BLADE...">
       <button class="primary" id="summonBtn">Summon</button>
+      <button id="summonAllBtn" title="Speak every known incantation in sequence">⚡ All</button>
     </div>
     <div class="incants" id="incantList"></div>
   </div>
@@ -453,8 +454,22 @@ async function handleHash(){
   await handleHash();
 })();
 
+async function summonAll(){
+  const remaining = DEMO_INCANTS.filter(it => ![...state.owned.values()].some(e=>e.seed_str===it.seed));
+  if (!remaining.length){ log('All demo incantations already summoned. Clear deck to retry.', 'warn'); return; }
+  log(`Speaking <b>${remaining.length}</b> incantations in sequence…`, 'info');
+  const btn = $('#summonAllBtn'); btn.disabled = true;
+  for (const it of remaining){
+    await summonIncant(it);
+    await new Promise(r=>setTimeout(r,120));
+  }
+  btn.disabled = false;
+  log(`<b>Rebuild complete.</b> ${state.owned.size} cards materialized from the federation.`, 'ok');
+}
+
 $('#summonBtn').addEventListener('click', summonCustom);
 $('#customIncant').addEventListener('keydown', e=>{ if(e.key==='Enter') summonCustom(); });
+$('#summonAllBtn').addEventListener('click', summonAll);
 $('#clearBtn').addEventListener('click', clearDeck);
 $('#exportBtn').addEventListener('click', exportDeck);
 window.addEventListener('hashchange', handleHash);
